@@ -1,25 +1,19 @@
 name: Generate Quiz Index
 
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'quiz/**/*.json'
-      - 'scripts/generateIndex.ts'
-      - 'scripts/generateAllJson.ts'
-  workflow_dispatch:
+on: [ push ]
+
+permissions:
+  contents: write
 
 jobs:
   generate-index:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref_name }}
           fetch-depth: 0
 
       - name: Setup Bun
@@ -44,8 +38,8 @@ jobs:
       - name: Commit and push changes
         if: steps.verify-changed-files.outputs.changed == 'true'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add index.json quiz/**/all.json
-          git commit -m "🤖 Auto-update quiz index and all.json files"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Auto-update quiz index and all.json files"
           git push
